@@ -1,0 +1,13 @@
+- name: ls
+  command: ls
+  arguments:
+      - /tmp
+  directory: /var
+  environment: a=b b=c
+  redirect_stderr: true
+  stdout_logfile: ./test.err
+  stderr_logfile: ./test.err
+- name: ls2
+  command: ls
+  directory: /var
+
