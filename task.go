@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/user"
+	"path/filepath"
 	"strings"
 
 	yaml "gopkg.in/yaml.v2"
@@ -21,6 +23,7 @@ type Program struct {
 	StdoutFile      string   `yaml:"stdout_logfile"`
 	StderrFile      string   `yaml:"stderr_logfile"`
 	ProcessesNumber int      `yaml:"numprocs"`
+	Cron            string   `yaml:"cron"` // required
 }
 
 var (
@@ -28,6 +31,21 @@ var (
 	defaultStdoutFile = fmt.Sprintf("~/.cake/%v.stdout.log", taskNameReplacer)
 	defaultStderrFile = fmt.Sprintf("~/.cake/%v.stderr.log", taskNameReplacer)
 )
+
+func ExpandUser(path string) string {
+	usr, _ := user.Current()
+	dir := usr.HomeDir
+
+	if path == "~" {
+		// In case of "~", which won't be caught by the "else if"
+		path = dir
+	} else if strings.HasPrefix(path, "~/") {
+		// Use strings.HasPrefix so we don't match paths like
+		// "/something/~/something/"
+		path = filepath.Join(dir, path[2:])
+	}
+	return path
+}
 
 func ParseProgramConfig(path string) (programs []*Program) {
 	yamlFile, err := ioutil.ReadFile(path)
@@ -53,6 +71,10 @@ func ParseProgramConfig(path string) (programs []*Program) {
 		}
 		if p.Command == "" {
 			log.Println("command is required")
+			os.Exit(3)
+		}
+		if p.Cron == "" {
+			log.Println("cron is required")
 			os.Exit(3)
 		}
 		if p.StdoutFile == "" {
@@ -83,6 +105,10 @@ func ParseProgramConfig(path string) (programs []*Program) {
 		if strings.Contains(p.StderrFile, taskNameReplacer) {
 			p.StderrFile = strings.Replace(p.StderrFile, taskNameReplacer, p.Name, -1)
 		}
+
+		// expand user
+		p.StdoutFile = ExpandUser(p.StdoutFile)
+		p.StderrFile = ExpandUser(p.StderrFile)
 	}
 	return
 }

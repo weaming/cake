@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"log"
 	"os/exec"
 	"strings"
 	"syscall"
@@ -25,8 +24,6 @@ func RunCommand(envs string, dir string, command string, args ...string) (exitCo
 	if dir != "" {
 		cmd.Dir = dir
 	}
-
-	log.Println(cmd)
 
 	var outbuf, errbuf bytes.Buffer
 	cmd.Stdout = &outbuf

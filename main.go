@@ -1,24 +1,54 @@
 package main
 
-import "fmt"
+import (
+	"flag"
+	"fmt"
+	"log"
+	"os"
 
-// import (
-// 	"fmt"
+	"github.com/robfig/cron"
+)
 
-// 	"github.com/robfig/cron"
-// )
-
-// func main() {
-// 	c := cron.New()
-// 	c.AddFunc("0 30 * * * *", func() { fmt.Println("Every hour on the half hour") })
-// 	c.AddFunc("@hourly", func() { fmt.Println("Every hour") })
-// 	c.AddFunc("@every 1h30m", func() { fmt.Println("Every hour thirty") })
-// 	c.Stop() // Stop the scheduler (does not stop any jobs already running).
-// }
+func In(a string, b []string) bool {
+	for _, x := range b {
+		if a == x {
+			return true
+		}
+	}
+	return false
+}
 
 func main() {
-	programs := ParseProgramConfig("./example.yaml")
-	for _, p := range programs {
-		fmt.Printf("%+v\n", *p)
+	if len(os.Args) > 1 && In(os.Args[1], []string{"", "usage"}) {
+		fmt.Println("See https://godoc.org/github.com/robfig/cron to learn how to define the cron field")
+		os.Exit(0)
+	}
+
+	config := flag.String("config", "./cake.yml", "The config path in YAML format")
+	detailLog := flag.Bool("log", false, "Print command stdout and stderr")
+	flag.Parse()
+
+	programs := ParseProgramConfig(*config)
+	c := cron.New()
+	c.Start()
+	// done := make(chan int)
+	for i, p := range programs {
+		log.Printf("%v %+v\n", i, *p)
+		err := c.AddFunc(p.Cron, func() {
+			log.Printf("Running command %+v\n", p)
+			exitCode, stdout, stderr := RunCommand(p.Envs, p.Dir, p.Command, p.Args...)
+			if *detailLog || exitCode != 0 {
+				text := fmt.Sprintf("Command result %v(%v %v):: exitCode: %v\n=== stdout ===\n%v\n===stderr===\n%v", p.Name, p.Command, p.Args, exitCode, stdout, stderr)
+				log.Println(text)
+			}
+
+			WriteLog(p.StdoutFile, stdout)
+			WriteLog(p.StderrFile, stderr)
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	for true {
 	}
 }
