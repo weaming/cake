@@ -31,7 +31,7 @@ func main() {
 	programs := ParseProgramConfig(*config)
 	c := cron.New()
 	c.Start()
-	// done := make(chan int)
+	done := make(chan int)
 	for i, p := range programs {
 		log.Printf("%v %+v\n", i, *p)
 		err := c.AddFunc(p.Cron, func() {
@@ -49,6 +49,5 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	for true {
-	}
+	<-done
 }
