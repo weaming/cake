@@ -109,6 +109,7 @@ func ParseProgramConfig(path string) (programs []*Program) {
 		// expand user
 		p.StdoutFile = ExpandUser(p.StdoutFile)
 		p.StderrFile = ExpandUser(p.StderrFile)
+		p.Dir = ExpandUser(p.Dir)
 	}
 	return
 }
