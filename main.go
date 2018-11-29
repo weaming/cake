@@ -33,7 +33,7 @@ func main() {
 	c.Start()
 	done := make(chan int)
 	for i, p := range programs {
-		log.Printf("%v %+v\n", i, *p)
+		log.Printf("The %v task is %+v\n", i, *p)
 		err := c.AddFunc(p.Cron, func() {
 			log.Printf("Running command %+v\n", p)
 			exitCode, stdout, stderr := RunCommand(p.Envs, p.Dir, p.Command, p.Args...)
