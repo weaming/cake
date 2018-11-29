@@ -12,7 +12,7 @@ An alternative to `cron` command.
 ## Install
 
 ```
-go install github.com/weaming/cake
+go get github.com/weaming/cake
 ```
 
 ## Usage
